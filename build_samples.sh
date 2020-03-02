@@ -43,7 +43,7 @@ if [ -z "$INTEL_OPENVINO_DIR" ]; then
         exit 1
     fi
 else
-    # case for run with `sudo -E` 
+    # case for run with `sudo -E`
     source "$INTEL_OPENVINO_DIR/bin/setupvars.sh"
 fi
 
@@ -52,22 +52,31 @@ if ! command -v cmake &>/dev/null; then
     exit 1
 fi
 
-build_dir=$HOME/inference_engine_samples_build
+build() {
+    BUILD_TYPE=$1
 
-OS_PATH=$(uname -m)
-NUM_THREADS="-j2"
+    BUILD_DIR=$HOME/Documents/ncs2/$BUILD_TYPE/
 
-if [ $OS_PATH == "x86_64" ]; then
-  OS_PATH="intel64"
-  NUM_THREADS="-j8"
-fi
+    OS_PATH=$(uname -m)
 
-if [ -e $build_dir/CMakeCache.txt ]; then
-    rm -rf $build_dir/CMakeCache.txt
-fi
-mkdir -p $build_dir
-cd $build_dir
-cmake -DCMAKE_BUILD_TYPE=Release $SAMPLES_PATH
-make $NUM_THREADS
+    if [ $OS_PATH == "x86_64" ]; then
+        OS_PATH="intel64"
+    fi
 
-printf "\nBuild completed, you can find binaries for all samples in the $build_dir/${OS_PATH}/Release subfolder.\n\n"
+    NUM_THREADS="-j$(nproc)"
+
+    #if [ -e $BUILD_DIR/CMakeCache.txt ]; then
+    #    rm -rf $BUILD_DIR/CMakeCache.txt
+    #fi
+
+    mkdir -p $BUILD_DIR
+    cd $BUILD_DIR
+
+    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $SAMPLES_PATH
+    make $NUM_THREADS
+
+    printf "\nBuild completed, you can find binaries for all samples in the $BUILD_DIR/$OS_PATH/$BUILD_TYPE subfolder.\n\n"
+}
+
+build "Debug"
+build "Release"
